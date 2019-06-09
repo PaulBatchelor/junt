@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <janet/janet.h>
+#include <runt.h>
 
 static int running = 1;
 
@@ -21,7 +22,13 @@ static int read_a_line(char **lp,
     return (rc != -1);
 }
 
-int main(int argc, char **argv) {
+static const JanetReg cfuns[] = {
+    {"quit", quit, "(quit)\n\nQuits REPL."},
+    {NULL, NULL, NULL}
+};
+
+int main(int argc, char **argv)
+{
     JanetTable *env;
     FILE *fp;
     char *line;
@@ -35,9 +42,11 @@ int main(int argc, char **argv) {
     janet_init();
 
     env = janet_core_env(NULL);
-    janet_def(env, "quit", janet_wrap_cfunction(quit), NULL);
 
     len = 0;
+
+    janet_cfuns(env, NULL, cfuns);
+
     while(read_a_line(&line, &len, fp, &read)) {
         janet_dostring(env, line, NULL, NULL);
     }
