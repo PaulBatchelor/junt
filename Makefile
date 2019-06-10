@@ -1,6 +1,6 @@
 LIBS=/usr/local/lib/libjanet.a
 CFLAGS=-Wall -pedantic -O3 -std=c99
-CFLAGS += -I$(HOME)/.runt/include
+CFLAGS += -I$(HOME)/.runt/include -g
 LIBS += -L$(HOME)/.runt/lib -lrunt
 
 OBJ=main.o

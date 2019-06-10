@@ -20,11 +20,40 @@ static Janet rvl(int32_t argc, Janet *argv)
     return janet_wrap_nil();
 }
 
+static Janet pushfun(int32_t argc, Janet *argv)
+{
+    JanetFunction *fun;
+    runt_stacklet *s;
+
+    fun = janet_getfunction(argv, 0);
+
+    runt_ppush(&vm, &s);
+
+    s->p = runt_mk_cptr(&vm, fun);
+    return janet_wrap_nil();
+}
+
 static const JanetReg cfuns[] = {
     {"quit", quit, "(quit)\n\nQuits REPL."},
     {"rvl", rvl, "(rvl)\n\nEvaluates Runt String."},
+    {"pushfun", pushfun, "(pushfun)\n\nEvaluates Runt String."},
     {NULL, NULL, NULL}
 };
+
+static runt_int rproc_jancall(runt_vm *vm, runt_ptr p)
+{
+    runt_int rc;
+    runt_stacklet *s;
+    JanetFunction *fun;
+    Janet jan;
+
+    rc = runt_ppop(vm, &s);
+    RUNT_ERROR_CHECK(rc);
+    fun = runt_to_cptr(s->p);
+
+    janet_pcall(fun, 0, NULL, &jan, NULL);
+    return RUNT_OK;
+}
 
 int main(int argc, char **argv)
 {
@@ -58,6 +87,8 @@ int main(int argc, char **argv)
 
     runt_vm_alloc(&vm, 128, RUNT_MEGABYTE * 1);
     runt_load_stdlib(&vm);
+    runt_keyword_define(&vm, "jancall", 7, rproc_jancall, NULL);
+    runt_mark_set(&vm);
     runt_set_state(&vm, RUNT_MODE_INTERACTIVE, RUNT_ON);
 
     janet_dobytes(env, bytes, sz, "main", NULL);
